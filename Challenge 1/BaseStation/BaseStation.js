@@ -36,17 +36,15 @@ sp.on("open", function () {
 	var count=0;
 	var temp = new Array();
 	var sum = 0;
-	var number = 0;
 	// Measuring period 5 seconds
 	setInterval(function() {
 		// method to be executed;
 		count = 0;
 		for(var i=0;i<temp.length;i++){
-			if (isNULL(temp[i])) {
+			if (!isNULL(temp[i])) {
 				count++;
-				error.push(i);
+				sum += temp[i];
 			}
-			else { sum += temp[i];}
 		}
 		     	
 		//var sum = temp.reduce((previous, current) => current += previous);
@@ -58,9 +56,8 @@ sp.on("open", function () {
 			var avg = avg_or.toFixed(2);
 			io.emit("chat message", "Avg temperature:" +avg);
 		}
-		if (count>0 || temp.length < Sen_number){
-			number = Sen_number > temp.length ? Sen_number-temp.length:0;
-			count = count + number;
+		if (count < Sen_number){
+			count = Sen_number-count;
 			io.emit("chat message",count+" sensor(s) failed to report! See log file for details.");
 	  	}
 		temp = [];
@@ -70,7 +67,6 @@ sp.on("open", function () {
 		console.log('data received: ' + data+count); 
 		var id = parseInt(data.slice(0,1));
 		temp[id]=parseFloat(data.slice(2,6));
-		count++;															
 		io.emit("chat message", "Sensor " +id + " value: " + temp[id]);
 	});
 });
