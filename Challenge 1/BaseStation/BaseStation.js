@@ -2,13 +2,24 @@ var SerialPort = require("serialport");
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-var Sen_number=4;
+var log4js = require("log4js");
+var log4js_config = require("./log4js.json");
+
+
+
+var Sen_number=4; //provide total sensor number here
+
+log4js.configure(log4js_config); //config log file
+console.log("Log start!");
+var LogFile = log4js.getLogger('log_file');
+
 
 var portName = process.argv[2],
-portConfig = {
-	baudRate: 9600,
-	parser: SerialPort.parsers.readline("\n")
+	portConfig = {
+		baudRate: 9600,
+		parser: SerialPort.parsers.readline("\n")
 };
+
 var sp;
 sp = new SerialPort.SerialPort(portName, portConfig);
 
@@ -17,7 +28,7 @@ app.get('/', function(req, res){
 });
 
 io.on('connection', function(socket){
-	console.log('a user connected');
+	LogFile.trace('A user connected.');
 	socket.on('disconnect', function(){
 	});
 	socket.on('chat message', function(msg){
@@ -45,26 +56,30 @@ sp.on("open", function () {
 				count++;
 				sum += temp[i];
 			}
+		else {LogFile.warn("Sensor "+i+" data missing");}
 		}
 		     	
 		//var sum = temp.reduce((previous, current) => current += previous);
 		if (temp.length===0){ 
+			LogFile.error("No data received!");
 			io.emit("chat message","No data received!\n");
 		}
 		else{
 			var avg_or = sum / (temp.length-count);
 			var avg = avg_or.toFixed(2);
-			io.emit("chat message", "Avg temperature:" +avg);
+			LogFile.info("Avg temperature:" +avg);
+			io.emit("chat message", "Avg temperature:" +avg); //report calculated temperature
 		}
 		if (count < Sen_number){
 			count = Sen_number-count;
-			io.emit("chat message",count+" sensor(s) failed to report! See log file for details.");
+			LogFile.warn(count+" sensor(s) failed to report! See log file for details.");
+			io.emit("chat message",count+" sensor(s) failed to report! See log file for details.");//report lost sensor data to socket server
 	  	}
 		temp = [];
 		sum =0;
-	}, 5000);
+	}, 5000);//set interval
 	sp.on('data', function(data) {
-		console.log('data received: ' + data+count); 
+		console.log('data received: ' + data); 
 		var id = parseInt(data.slice(0,1));
 		temp[id]=parseFloat(data.slice(2,6));
 		io.emit("chat message", "Sensor " +id + " value: " + temp[id]);
