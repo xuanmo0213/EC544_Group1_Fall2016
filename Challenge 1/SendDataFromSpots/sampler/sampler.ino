@@ -18,8 +18,8 @@ void setup() {
 
 void loop() {
   //获得串联中点的电压值  
-  double digitalValue=analogRead(1);  Measure adc from pin A1
-  double voltageValue=(digitalValue/1023)*5;  Calculate voltage
+  double digitalValue=analogRead(1); // Measure adc from pin A1
+  double voltageValue=(digitalValue/1023)*5;  //Calculate voltage
   Serial.print("Current voltage value=");  
   Serial.println(voltageValue);  
   //通过分压比获得热敏电阻的阻值  Calculate resistance of sensor
@@ -32,7 +32,7 @@ void loop() {
   Serial.println(((T1*B)/(B+T1*log(Rt/R1)))-273.15);// 
   Serial.println();   
   //每5秒输出，更改此处修改频率 Send to base station every 5 seconds
-  XBee.print("Sensor 2 Temperature = ");
+  XBee.print("2,");
   XBee.println(((T1*B)/(B+T1*log(Rt/R1)))-273.15);
   delay(5000);
 }
