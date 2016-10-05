@@ -37,7 +37,7 @@
         </select>
         <script type="text/javascript">
             var mintime, maxtime;  
-            var urlm = 'http://localhost:3000/api/minmax';
+            var urlm = 'http://192.168.1.113:3002/api/minmax';
             $.getJSON(urlm, callbackmin_max);
             function callbackmin_max(str){
                 mintime = new Date(str[0]["mintime"]);
@@ -76,7 +76,10 @@
                     var sensor_1 = new Array();
                     var sensor_2 = new Array();
                     var sensor_3 = new Array();
+                    var sensor_4 = new Array();
                     var avg = new Array();
+					
+					//var maxtemp = 0, mintemp = 999;
                     var y1 = date1.getFullYear(),
                         m1 = date1.getMonth()+1,
                         d1 = date1.getDate(),
@@ -94,31 +97,49 @@
                     
                     
                     var datequery = dd1+"_"+dd2;   
-                    var url = "http://localhost:3000/api/history/" + datequery;     
+                    var url = "http://192.168.1.113:3002/api/history/" + datequery;     
                     
                     $.getJSON(url, callbackfunction);
-                    //alert(data_from_json[0]["time"])
+                   // alert(data_from_json[0]["time"])
+							var max = new Array();
+							var min = new Array();
                     function callbackfunction(data){
+						//var min = 999, max = 0;
                         for(var index = 0; index < data.length; index++){
                              //alert(data[index]['time']);
                              times_x.push(data[index]['time']);
+							//var max = 0, min = 99;
                              var sensor_data = new Array();
-                             var maxtemp = 0, mintemp = 999;
                              sensor_data = data[index]['data'].split(",");
+							 var maxtemp = 0, mintemp = 999;
                              for(var j = 0; j < sensor_data.length; j ++){
                                  var row = sensor_data[j].split(":");
                                  switch(row[0]){
                                          case('sensor_1'): sensor_1[index] = parseFloat(row[1]);
                                          case('sensor_2'): sensor_2[index] = parseFloat(row[1]);
-                                         case('sensor_3'): sensor_3[index] = parseFloat(row[1]);   
-                                         case('avg'): avg[index] = parseFloat(row[1]);
-                                         maxtemp = Math.max(maxtemp, parseFloat(row[1]));
-                                         mintemp = Math.min(mintemp, parseFloat(row[1]));
+                                         case('sensor_3'): sensor_3[index] = parseFloat(row[1]);
+                                         case('snesor_4'): sensor_4[index] = parseFloat(row[1]);  
+                                         case('avg'): avg[index] = parseFloat(row[1]);       
                                  }
+								maxtemp = Math.max(maxtemp , parseFloat(row[1]));
+                                mintemp = Math.min(mintemp , parseFloat(row[1]));
+								
                              }
+							 if(!isNaN(maxtemp)){ max.push(maxtemp);};
+							 //if(!isNaN(mintemp)){ min.push(mintemp);};
+							  //if (typeof(maxtemp)!="undefined" && maxtemp !=null) {
+								//max.push(maxtemp);}
+							  //if (temp_mim) {
+                                //min.push(temp_mim);}
+
+			    
                         }
+						maxtemp = Math.max.apply(null,max);
+						//mimtemp = Math.mim.apply(999,max);
+						//alert(min);
                         $('#container').highcharts({
                                 chart: {
+				  zoomType:'x',
                                   backgroundColor: 'rgba(255, 255, 255, 0.80)'
                                 },
                                 title: {
@@ -135,7 +156,7 @@
                                 },
                                 yAxis: {
                                     text:'/centigrade',
-                                    max :maxtemp+0.3,
+                                    max :maxtemp+0.2,
                                     min :mintemp-0.5,
                                     tickInterval: 1,
                                     title: {
@@ -165,7 +186,12 @@
                                 }, {
                                     name: 'sensor_3',
                                     data: sensor_3
-                                }, {
+                                },
+                                {
+                                    name: 'sensor_4',
+                                    data: sensor_4
+                                },
+                                {
                                     name: 'avg',
                                     data: avg,
                                     type: 'column',
@@ -186,13 +212,13 @@
         <label class="menu-toggle" for="menu"><span>Toggle</span></label>
         <ul>
           <li>
-            <a href="http://localhost:3000">Home</a>
+            <a href="http://192.168.1.113:3002">Home</a>
           </li>
           <li>
-            <a href="http://localhost:3000/realtime">RealTime</a>
+            <a href="http://192.168.1.113:3002/realtime">RealTime</a>
           </li>
           <li>
-            <a href="http://localhost:3000/history">History</a>
+            <a href="http://192.168.1.113:3002/history">History</a>
           </li>
         </ul>
       </div>
@@ -200,9 +226,6 @@
 <!--***********************/-->
     <!--<div>
     <h2 align ="center">Historical Data</h2>  
-    </div>-->
-    
-    
-    
+    </div>-->    
 </body>
 </html>
