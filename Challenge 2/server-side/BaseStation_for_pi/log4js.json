@@ -1,0 +1,22 @@
+{
+    "appenders":
+        [
+            {
+                "type":"console"              
+            },
+            {
+                "category":"log_file",
+                "type": "file",
+                "filename": "./logs/log_file/file.log",
+                "maxLogSize": 104800,
+                "backups": 100
+            }
+        ],
+    "replaceConsole": true,
+    "levels":
+    {
+        "log_file":"WARN",
+        "console":"ALL"
+    }
+}
+
