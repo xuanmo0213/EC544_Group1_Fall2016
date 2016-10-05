@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
+<script src="js/jquery-2.1.4.js"></script>
+<script src="js/main.js"></script> <!-- Resource jQuery -->   
+<link href = "static/source.css" rel = "stylesheet">
+    
+    
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" href="css/reset.css"> <!-- CSS reset -->
+<link rel="stylesheet" href="css/style.css"> <!-- Resource style -->
+<script src="js/modernizr.js"></script> <!-- Modernizr -->    
+    <title>history_data</title>
+</head>
+<body>  
+    <div id="wrapper" style = "">
+        <div id="info">
+        <div align = "center"><h1>Historical Data</h1></div>
+        <div id = "container" style = " width : 750px; height : 400px;  margin-left: 200px; margin-top:50px" > 
+            <label id = "label" style = "color:white" font size = "100px"><strong></strong></label>
+        <br/>
+        <br/>
+        </div>
+            
+        <div id = "select" align = "center">
+        <br/>
+        <br/>
+        <select id = "selector1" >
+        </select>
+        <select id = "selector2">
+        </select>
+        <script type="text/javascript">
+            var mintime, maxtime;  
+            var urlm = 'http://localhost:3000/api/minmax';
+            $.getJSON(urlm, callbackmin_max);
+            function callbackmin_max(str){
+                mintime = new Date(str[0]["mintime"]);
+                maxtime = new Date(str[0]["maxtime"]);
+                //alert(maxtime)
+                var gap = maxtime-mintime;
+                var truegap = gap/10 > 60*1000? 60*1000:gap/10;
+                var t = new Date(str[0]["mintime"]);
+                //alert(gap);
+                for(var index = 0; index <= gap/truegap; index++){
+                    t.setMilliseconds(t.getMilliseconds()+ truegap);
+                    $("#selector1").append("<option value ="+index +">" + t + "</option>");
+                    $("#selector2").append("<option value ="+index +">" + t + "</option>");
+                    //alert(t);
+                }
+            }
+        </script>
+        <button id = "draw" type = "button">Draw history</button>
+        <script type="text/javascript">
+            $("#draw").click(function(){
+                var obj1 = document.getElementById('selector1');
+                var value1=obj1.options[obj1.selectedIndex].text; //文本
+                var obj2 = document.getElementById('selector2');
+                var value2=obj2.options[obj2.selectedIndex].text; //文本
+                
+                //alert(value1 + "  " + value2);
+                var date1 = new Date(value1), date2 = new Date(value2);
+                //alert(date1);
+                if(date1 - date2 >= 0){
+                    //alert("hahahdsf")
+                    $("#label").text("Please select correct dates");
+                    
+                }
+                else{
+                    var times_x = new Array();
+                    var sensor_1 = new Array();
+                    var sensor_2 = new Array();
+                    var sensor_3 = new Array();
+                    var avg = new Array();
+                    var y1 = date1.getFullYear(),
+                        m1 = date1.getMonth()+1,
+                        d1 = date1.getDate(),
+                        hour1 = date1.getHours(),
+                        min1 = date1.getMinutes(),
+                        sec1 = date1.getSeconds();
+                    var dd1 = y1+"-"+m1+"-"+d1+" "+hour1 +":"+min1+":"+sec1;
+                    var y2 = date2.getFullYear(),
+                        m2 = date2.getMonth()+1,
+                        d2 = date2.getDate(),
+                        hour2 = date2.getHours(),
+                        min2 = date2.getMinutes(),
+                        sec2 = date2.getSeconds();
+                    var dd2 = y2+"-"+m2+"-"+d2+" "+hour2 +":"+min2+":"+sec2;
+                    
+                    
+                    var datequery = dd1+"_"+dd2;   
+                    var url = "http://localhost:3000/api/history/" + datequery;     
+                    
+                    $.getJSON(url, callbackfunction);
+                    //alert(data_from_json[0]["time"])
+                    function callbackfunction(data){
+                        for(var index = 0; index < data.length; index++){
+                             //alert(data[index]['time']);
+                             times_x.push(data[index]['time']);
+                             var sensor_data = new Array();
+                             var maxtemp = 0, mintemp = 999;
+                             sensor_data = data[index]['data'].split(",");
+                             for(var j = 0; j < sensor_data.length; j ++){
+                                 var row = sensor_data[j].split(":");
+                                 switch(row[0]){
+                                         case('sensor_1'): sensor_1[index] = parseFloat(row[1]);
+                                         case('sensor_2'): sensor_2[index] = parseFloat(row[1]);
+                                         case('sensor_3'): sensor_3[index] = parseFloat(row[1]);   
+                                         case('avg'): avg[index] = parseFloat(row[1]);
+                                         maxtemp = Math.max(maxtemp, parseFloat(row[1]));
+                                         mintemp = Math.min(mintemp, parseFloat(row[1]));
+                                 }
+                             }
+                        }
+                        $('#container').highcharts({
+                                chart: {
+                                  backgroundColor: 'rgba(255, 255, 255, 0.80)'
+                                },
+                                title: {
+                                    text: 'Historical Data',
+                                    x: -20 //center
+                                },
+                                subtitle: {
+                                    text: 'EC544-Chanllenge2-Group1',
+                                    x: -20
+                                },
+                                xAxis: {
+                                    text:'/date',
+                                    categories: times_x
+                                },
+                                yAxis: {
+                                    text:'/centigrade',
+                                    max :maxtemp+0.3,
+                                    min :mintemp-0.5,
+                                    tickInterval: 1,
+                                    title: {
+                                        text: 'Temperature (°C)'
+                                    },
+                                    plotLines: [{
+                                        value: 0,
+                                        width: 5,
+                                        color: '#000000'
+                                    }]
+                                },
+                                tooltip: {
+                                    valueSuffix: '°C'
+                                },
+                                legend: {
+                                    layout: 'vertical',
+                                    align: 'right',
+                                    verticalAlign: 'middle',
+                                    borderWidth: 0
+                                },
+                                series: [{
+                                    name: 'sensor_1',
+                                    data: sensor_1
+                                }, {
+                                    name: 'sensor_2',
+                                    data: sensor_2
+                                }, {
+                                    name: 'sensor_3',
+                                    data: sensor_3
+                                }, {
+                                    name: 'avg',
+                                    data: avg,
+                                    type: 'column',
+                                    color: 'rgba(255, 255, 10, 0.50)'
+
+                                }]
+                            });
+                    }
+                }
+
+            });
+        </script>
+    </div>
+<div id="info-content"></div>
+</div>
+    <input type="checkbox" id="menu" name="menu" class="menu-checkbox">
+      <div class="menu">
+        <label class="menu-toggle" for="menu"><span>Toggle</span></label>
+        <ul>
+          <li>
+            <a href="http://localhost:3000">Home</a>
+          </li>
+          <li>
+            <a href="http://localhost:3000/realtime">RealTime</a>
+          </li>
+          <li>
+            <a href="http://localhost:3000/history">History</a>
+          </li>
+        </ul>
+      </div>
+    </div><!-- #wrapper -->
+<!--***********************/-->
+    <!--<div>
+    <h2 align ="center">Historical Data</h2>  
+    </div>-->
+    
+    
+    
+</body>
+</html>
