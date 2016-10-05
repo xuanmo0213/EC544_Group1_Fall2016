@@ -5,9 +5,10 @@ var express = require('express'),
 
         connection = mysql.createConnection({
           host: 'localhost',
+	  port: "3306",
           user: 'root',
-          password: 'Goodluck526!',
-          database: 'nodesample'
+          password: '1111',
+          database: 'challenge2'
         }),   
 
         //In Node mysql, we can use pooling directly to handle multiple connection and reuse the connection.
@@ -15,8 +16,8 @@ var express = require('express'),
             connectionLimit : 1000,
             host: 'localhost',
             user: 'root',
-            password: 'Goodluck526!',
-            database: 'nodesample'
+            password: '1111',
+            database: 'challenge2'
         });
 function initConnection(){
     connection.connect(function(err){
@@ -63,7 +64,7 @@ app.get('/api/realtime/:date', function(req, res){
     pool.getConnection(function(err, connection){
         var currdate = req.params.date;
         console.log(currdate);
-        connection.query("SELECT time, group_concat(sensor_id separator ',') as 'data' FROM (SELECT time, concat(sensor_id,':',group_concat(temp separator ',')) as sensor_id FROM sensor_data Group by time, sensor_id)sensor_data  WHERE time > '"+ currdate + "' - INTERVAL 20 SECOND Group by time",function(err, rows, field){
+        connection.query("SELECT time, group_concat(sensor_id separator ',') as 'data' FROM (SELECT time, concat(sensor_id,':',group_concat(temp separator ',')) as sensor_id FROM sensor_data Group by time, sensor_id)sensor_data  WHERE time > '"+ currdate + "' - INTERVAL 40 SECOND Group by time",function(err, rows, field){
             res.json(rows);
         });
     });
@@ -79,4 +80,4 @@ app.get("/api/minmax",function(req,res){
 
 app.use('/static', express.static(__dirname));
 
-app.listen(3000);
+app.listen(3002);
